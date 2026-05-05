@@ -1,5 +1,5 @@
-import db from "../config/db.js";
-import { sendOtpEmail } from "../utils/sendOtp.js";
+import db from "../../config/db.js";
+import { sendOtpEmail } from "../../utils/sendOtp.js";
 
 
 export const requestPasswordReset = async (req, res) => {

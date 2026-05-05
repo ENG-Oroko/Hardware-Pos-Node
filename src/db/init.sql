@@ -1,7 +1,4 @@
-DROP TABLE IF EXISTS users CASCADE;
-DROP TABLE IF EXISTS password_reset_otps CASCADE;
-DROP TABLE IF EXISTS branches CASCADE;
-DROP TABLE IF EXISTS stores CASCADE;
+
 
 -- ======================
 -- 1. STORES (PARENT)
@@ -12,6 +9,8 @@ CREATE TABLE stores (
   email VARCHAR(150),
   phone VARCHAR(30),
   address TEXT,
+  kra_pin VARCHAR(50),
+  logo TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -21,7 +20,7 @@ CREATE TABLE stores (
 CREATE TABLE branches (
   id SERIAL PRIMARY KEY,
   store_id INTEGER REFERENCES stores(id) ON DELETE CASCADE,
-  name VARCHAR(150) NOT NULL,
+  branch_name VARCHAR(150) NOT NULL,
   location TEXT,
   phone VARCHAR(30),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

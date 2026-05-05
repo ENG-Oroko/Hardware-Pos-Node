@@ -21,3 +21,21 @@ export const loginLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+export const resetRequestLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 3, // only 3 OTP requests per minute
+  message: {
+    success: false,
+    message: "Too many OTP requests. Please wait a minute.",
+  },
+});
+
+export const resetPasswordLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // only 5 attempts
+  message: {
+    success: false,
+    message: "Too many reset attempts. Try again later.",
+  },
+});

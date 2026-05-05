@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
-import db from "../config/db.js";
-import { generateToken } from "../utils/jwt.js";
+import db from "../../config/db.js";
+import { generateToken } from "../../utils/jwt.js";
 
 /* ======================
    LOGIN USER
@@ -45,17 +45,18 @@ export const loginUser = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
-    // 5. response (NO token exposed here)
-    res.json({
-      success: true,
-      message: "Login successful",
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
-    });
+// 5. response (include token for testing)
+res.json({
+  success: true,
+  message: "Login successful",
+  token, // 👈 add this
+  user: {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+  },
+});
 
   } catch (err) {
     res.status(500).json({

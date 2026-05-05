@@ -6,6 +6,8 @@ import cookieParser from "cookie-parser";
 import "./config/db.js";
 
 import authRoutes from "./routes/auth.routes.js";
+import superAdminRoutes from "./routes/superadmin.routes.js";
+import branchRoutes from "./routes/branch.routes.js";
 
 import { apiLimiter } from "./middleware/rateLimiter.js";
 import errorHandler from "./middleware/errorHandler.js";
@@ -36,6 +38,8 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/superadmin", superAdminRoutes);
+app.use("/api/branches", branchRoutes);
 
 // ERROR HANDLER (LAST) //
 
