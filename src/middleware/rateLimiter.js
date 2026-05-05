@@ -39,3 +39,25 @@ export const resetPasswordLimiter = rateLimit({
     message: "Too many reset attempts. Try again later.",
   },
 });
+
+export const logoutLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10, // max 10 logout requests per minute
+  message: {
+    success: false,
+    message: "Too many logout attempts, try again later",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+export const createStoreLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 5, // only 5 requests per minute
+  message: {
+    success: false,
+    message: "Too many store creation requests. Try again later.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});

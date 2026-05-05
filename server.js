@@ -2,8 +2,8 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import app from "./src/app.js";
-import { runInitSql } from "./src/utils/runInitSql.js";
-import seedSuperAdmin from "./src/utils/seedAdmin.js";
+import { runInitSql } from "./src/seed/runInitSql.js";
+import seedSuperAdmin from "./src/seed/seedAdmin.js";
 
 const PORT = process.env.PORT || 5000;
 

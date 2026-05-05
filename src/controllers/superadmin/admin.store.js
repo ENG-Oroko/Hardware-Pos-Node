@@ -1,13 +1,14 @@
 import db from "../../config/db.js";
-import bcrypt from "bcrypt";
+import { hashPassword } from "../../utils/hashPassword.js";
 
 /* =========================
-   CREATE STORE + ADMIN
+   CREATE STORE + ADMIN (FAST)
 ========================= */
 export const createStoreWithAdmin = async (req, res) => {
+  const client = await db.connect();
+
   try {
     const {
-      // STORE DATA
       store_name,
       store_email,
       store_phone,
@@ -15,7 +16,6 @@ export const createStoreWithAdmin = async (req, res) => {
       kra_pin,
       logo,
 
-      // ADMIN DATA
       admin_first_name,
       admin_second_name,
       admin_surname,
@@ -23,20 +23,35 @@ export const createStoreWithAdmin = async (req, res) => {
       admin_password,
     } = req.body;
 
-    /* =========================
-       1. CREATE STORE
-    ========================= */
-    const storeResult = await db.query(
-      `INSERT INTO stores (
-        name,
-        email,
-        phone,
-        address,
-        kra_pin,
-        logo
-      )
-      VALUES ($1,$2,$3,$4,$5,$6)
-      RETURNING *`,
+    // ⚡ FAST VALIDATION (early exit)
+    if (!store_name || !admin_email || !admin_password) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields",
+      });
+    }
+
+    await client.query("BEGIN");
+
+    // ⚡ FAST DUPLICATE CHECK
+    const exists = await client.query(
+      "SELECT 1 FROM users WHERE email = $1 LIMIT 1",
+      [admin_email]
+    );
+
+    if (exists.rowCount) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({
+        success: false,
+        message: "Admin email already exists",
+      });
+    }
+
+    // ⚡ PARALLEL EXECUTION (store + hash)
+    const storePromise = client.query(
+      `INSERT INTO stores (name, email, phone, address, kra_pin, logo)
+       VALUES ($1,$2,$3,$4,$5,$6)
+       RETURNING id`,
       [
         store_name,
         store_email,
@@ -47,17 +62,17 @@ export const createStoreWithAdmin = async (req, res) => {
       ]
     );
 
-    const store = storeResult.rows[0];
+    const hashPromise = hashPassword(admin_password);
 
-    /* =========================
-       2. HASH PASSWORD
-    ========================= */
-    const hashedPassword = await bcrypt.hash(admin_password, 10);
+    const [storeResult, hashedPassword] = await Promise.all([
+      storePromise,
+      hashPromise,
+    ]);
 
-    /* =========================
-       3. CREATE ADMIN USER
-    ========================= */
-    const adminResult = await db.query(
+    const storeId = storeResult.rows[0].id;
+
+    // ⚡ CREATE ADMIN (minimal return)
+    const adminResult = await client.query(
       `INSERT INTO users (
         first_name,
         second_name,
@@ -67,35 +82,36 @@ export const createStoreWithAdmin = async (req, res) => {
         role,
         store_id
       )
-      VALUES ($1,$2,$3,$4,$5,$6,$7)
-      RETURNING *`,
+      VALUES ($1,$2,$3,$4,$5,'admin',$6)
+      RETURNING id, email, role, store_id`,
       [
         admin_first_name,
         admin_second_name,
         admin_surname,
         admin_email,
         hashedPassword,
-        "admin",
-        store.id,
+        storeId,
       ]
     );
 
-    const admin = adminResult.rows[0];
+    await client.query("COMMIT");
 
-    /* =========================
-       RESPONSE
-    ========================= */
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: "Store and admin created successfully",
-      store,
-      admin,
+      store_id: storeId,
+      admin: adminResult.rows[0],
     });
 
   } catch (err) {
-    res.status(500).json({
+    await client.query("ROLLBACK");
+
+    return res.status(500).json({
       success: false,
-      message: err.message,
+      message: "Server error",
     });
+
+  } finally {
+    client.release();
   }
 };

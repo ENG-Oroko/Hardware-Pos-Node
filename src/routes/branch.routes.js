@@ -1,5 +1,5 @@
 import express from "express";
-import { createBranch } from "../controllers/POS/branch.controller.js";
+import { createBranch } from "../controllers/branch/branch.controller.js";
 import { verifyToken } from "../middleware/auth/authMiddleware.js";
 import { isAdminOrSuperAdmin } from "../middleware/auth/roleMiddleware.js";
 
